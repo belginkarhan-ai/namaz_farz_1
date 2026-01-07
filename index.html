@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Namazın Şartları - Mobil Uyumlu</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #27ae60;
+            --selected: #f39c12; /* Seçili öğe rengi */
+            --bg-color: #f4f6f7;
+            --card-bg: #ffffff;
+            --text-color: #34495e;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent; /* Mobilde tıklama gölgesini kaldır */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 10px 10px 140px 10px; /* Alt kısımda menü için boşluk */
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin: 10px 0;
+        }
+
+        .instructions {
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Tanım Kartları */
+        .definition-card {
+            background: var(--card-bg);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .definition-text {
+            font-size: 1rem;
+            line-height: 1.4;
+            font-weight: 500;
+        }
+
+        .drop-zone {
+            height: 50px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #7f8c8d;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .drop-zone.highlight {
+            border-color: var(--selected);
+            background: #fef9e7;
+        }
+
+        .drop-zone.correct {
+            border: 2px solid var(--accent);
+            background: #e8f8f5;
+            color: var(--accent);
+        }
+
+        /* Alt Sabit Menü (Kavramlar) */
+        .concepts-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            padding: 15px 10px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto; /* Yan yana kaydırma */
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .concept-item {
+            background: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.2s, background 0.3s;
+            flex-shrink: 0; /* Küçülmesini engelle */
+        }
+
+        .concept-item.selected {
+            background: var(--selected);
+            transform: scale(1.05);
+            box-shadow: 0 0 10px var(--selected);
+        }
+
+        .concept-item.placed {
+            opacity: 0.5;
+            pointer-events: none;
+            background: #95a5a6;
+            display: none; /* Yerleşeni menüden kaldır */
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .badge {
+            font-size: 80px;
+            margin: 10px 0;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            margin-top: 15px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .footer-info {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #bdc3c7;
+            margin-top: 20px;
+        }
+
+        /* Animasyonlar */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .shake { animation: shake 0.3s ease; border-color: #e74c3c !important; background: #fadbd8 !important; }
+    </style>
+</head>
+<body>
+
+    <h2>Namazın Şartları</h2>
+    <div class="instructions">
+        Aşağıdaki kavramı seçin, ardından yukarıdaki doğru tanımın kutusuna tıklayın.
+    </div>
+
+    <div id="gameArea">
+        </div>
+
+    <div class="footer-info">Tasarlayan: Naci Karhan</div>
+
+    <div class="concepts-container" id="conceptsBar">
+        </div>
+
+    <div class="modal-overlay" id="resultModal">
+        <div class="modal-content">
+            <h3>Tebrikler!</h3>
+            <div class="badge">📖</div>
+            <p id="resultText">Tüm eşleştirmeleri başarıyla tamamladın.</p>
+            <button class="btn" onclick="location.reload()">Tekrar Oynat</button>
+        </div>
+    </div>
+
+<script>
+    const data = [
+        { id: 1, text: "Hadesten Taharet", desc: "Abdestsizlik veya cünüplük gibi hükmî kirlilikten temizlenmek." },
+        { id: 2, text: "Necasetten Taharet", desc: "Bedeni, elbiseyi ve namaz kılınacak yeri pislikten temizlemek." },
+        { id: 3, text: "Setr-i Avret", desc: "Vücudun örtülmesi gereken yerlerini örtmek." },
+        { id: 4, text: "İstikbal-i Kıble", desc: "Namaz kılarken Kâbe’ye yönelmek." },
+        { id: 5, text: "Vakit", desc: "Her namazı kendi zaman dilimi içinde kılmak." },
+        { id: 6, text: "Niyet", desc: "Hangi namazın kılınacağını kalben bilmek ve belirlemek." }
+    ];
+
+    let selectedConcept = null;
+    let correctCount = 0;
+    
+    // Ses Efektleri
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTone(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        if(type === 'success') {
+            osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        }
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.5);
+    }
+
+    function init() {
+        const gameArea = document.getElementById('gameArea');
+        const conceptsBar = document.getElementById('conceptsBar');
+
+        // Tanımları Oluştur
+        data.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'definition-card';
+            card.innerHTML = `
+                <div class="definition-text">${item.desc}</div>
+                <div class="drop-zone" data-id="${item.id}" onclick="handleDropClick(this)">
+                    Dokun ve Eşleştir
+                </div>
+            `;
+            gameArea.appendChild(card);
+        });
+
+        // Kavramları Karıştır ve Oluştur
+        [...data].sort(() => Math.random() - 0.5).forEach(item => {
+            const chip = document.createElement('div');
+            chip.className = 'concept-item';
+            chip.textContent = item.text;
+            chip.dataset.id = item.id;
+            chip.onclick = () => selectConcept(chip);
+            conceptsBar.appendChild(chip);
+        });
+    }
+
+    function selectConcept(element) {
+        // Zaten yerleşmişse işlem yapma
+        if(element.classList.contains('placed')) return;
+
+        // Önceki seçimi kaldır
+        if(selectedConcept) {
+            selectedConcept.classList.remove('selected');
+        }
+
+        // Eğer aynı şeye tıkladıysa seçimi iptal et
+        if (selectedConcept === element) {
+            selectedConcept = null;
+            removeHighlights();
+            return;
+        }
+
+        // Yeni seçim yap
+        selectedConcept = element;
+        selectedConcept.classList.add('selected');
+        
+        // Kullanıcıya nereye koyacağını göstermek için kutuları vurgula
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            if(!zone.classList.contains('correct')) {
+                zone.classList.add('highlight');
+                zone.textContent = "Buraya Tıkla";
+            }
+        });
+    }
+
+    function handleDropClick(zone) {
+        if (!selectedConcept) return; // Kavram seçili değilse işlem yapma
+        if (zone.classList.contains('correct')) return; // Zaten doluysa işlem yapma
+
+        const zoneId = parseInt(zone.dataset.id);
+        const conceptId = parseInt(selectedConcept.dataset.id);
+
+        if (zoneId === conceptId) {
+            // DOĞRU
+            playTone('success');
+            zone.classList.remove('highlight');
+            zone.classList.add('correct');
+            zone.textContent = selectedConcept.textContent;
+            
+            selectedConcept.classList.add('placed'); // Alt menüden gizle
+            selectedConcept.classList.remove('selected');
+            selectedConcept = null;
+            
+            removeHighlights();
+            correctCount++;
+            
+            if (correctCount === data.length) {
+                setTimeout(() => {
+                    document.getElementById('resultModal').style.display = 'flex';
+                }, 500);
+            }
+
+        } else {
+            // YANLIŞ
+            playTone('error');
+            zone.classList.add('shake');
+            setTimeout(() => zone.classList.remove('shake'), 400);
+            
+            // Seçimi iptal etme, kullanıcı tekrar deneyebilir
+        }
+    }
+
+    function removeHighlights() {
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            if(!zone.classList.contains('correct')) {
+                zone.classList.remove('highlight');
+                zone.textContent = "Dokun ve Eşleştir";
+            }
+        });
+    }
+
+    window.onload = init;
+
+</script>
+
+</body>
+</html>
